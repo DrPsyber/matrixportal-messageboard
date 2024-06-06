@@ -20,7 +20,7 @@ up_button.pull = Pull.UP
 class AirMode(displayio.Group):
 
     def __init__(self,*):
-        super().__init__(max_size=3)
+        super().__init__()
 
         self.submodes = ("OnAir","OffAir","NapTime","Recording")
 
@@ -28,24 +28,24 @@ class AirMode(displayio.Group):
         self.R = 0
         self.G = 0
         self.B = 0
-        self._bg_group = displayio.Group(max_size=1)
-        self._2Lines = displayio.Group(max_size=2)
-        self._3Lines = displayio.Group(max_size=3)
+        self._bg_group = displayio.Group()
+        self._2Lines = displayio.Group()
+        self._3Lines = displayio.Group()
 
         self.font = bitmap_font.load_font("fonts/BellotaText-Bold-21_DJL.bdf")
         self.font.load_glyphs(b"ONAIRFNPTE")
-        self.Line1 = Label(self.font, max_glyphs=3,anchored_position=(32,8),
+        self.Line1 = Label(self.font, anchored_position=(32,8),
             anchor_point = (0.5,0.5))
-        self.Line2 = Label(self.font, max_glyphs=3,anchored_position=(32,8+17),
+        self.Line2 = Label(self.font, anchored_position=(32,8+17),
             anchor_point = (0.5,0.5))
         self._2Lines.append(self.Line1)
         self._2Lines.append(self.Line2)
 
-        self.LineA = Label(FONT, max_glyphs=10,anchored_position=(32,-1),
+        self.LineA = Label(FONT, anchored_position=(32,-1),
             anchor_point = (0.5,0))
-        self.LineB = Label(FONT, max_glyphs=10,anchored_position=(32,8),
+        self.LineB = Label(FONT, anchored_position=(32,8),
             anchor_point = (0.5,0))
-        self.LineC = Label(FONT, max_glyphs=10,anchored_position=(32,17),
+        self.LineC = Label(FONT, anchored_position=(32,17),
             anchor_point = (0.5,0))
         self._3Lines.append(self.LineA)
         self._3Lines.append(self.LineB)
@@ -144,7 +144,7 @@ class WeatherMode(displayio.Group):
 
 
     def __init__(self,*,network=None, location=None,token=None):
-        super().__init__(max_size=3)
+        super().__init__()
 
         self.WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather?q={}&units=metric&appid={}"\
             .format(location,token)
@@ -168,8 +168,8 @@ class WeatherMode(displayio.Group):
         bb = self.font.get_bounding_box()
         (f_w,f_h) = bb[0], bb[1]
 
-        self._bg_group = displayio.Group(max_size=1)
-        self.weather1 = displayio.Group(max_size=6)
+        self._bg_group = displayio.Group()
+        self.weather1 = displayio.Group()
 
         UNIT_COLOR = 0x202020
         TEXT_COLOR = 0x301040
@@ -181,17 +181,17 @@ class WeatherMode(displayio.Group):
         self.display_mode = 0
         self.display_modes = 3
 
-        self.temp_l = Label(self.font,max_glyphs=5,color=0x5050F8,
+        self.temp_l = Label(self.font,color=0x5050F8,
             anchored_position=(64-2*f_w,-3),anchor_point=(1.0,0.0),line_spacing=1.0)
-        self.temp_unit_l = Label(self.symfont,max_glyphs=2,color=UNIT_COLOR,
+        self.temp_unit_l = Label(self.symfont,color=UNIT_COLOR,
             anchored_position=(64,1),anchor_point=(1.0,0.0),line_spacing=1.0)
-        self.magnitude_l = Label(self.font,max_glyphs=3,color=WIND_COLOR,
+        self.magnitude_l = Label(self.font,color=WIND_COLOR,
             anchored_position=(64-(4*f_w)+4,15),anchor_point=(1.0,0.5),line_spacing=1.0)
-        self.unit_l = Label(self.symfont,max_glyphs=3,color=UNIT_COLOR,
+        self.unit_l = Label(self.symfont,color=UNIT_COLOR,
             anchored_position=(64-(3*f_w/2)+2,17),anchor_point=(1.0,0.5),line_spacing=1.0)
-        self.dir_l = Label(self.symfont,max_glyphs=1,color=self.WDIR_COLOR,
+        self.dir_l = Label(self.symfont,color=self.WDIR_COLOR,
             anchored_position=(64,16),anchor_point=(1.0,0.5),line_spacing=1.0)
-        self.text_l = Label(self.font,max_glyphs=12,color=TEXT_COLOR,
+        self.text_l = Label(self.font,color=TEXT_COLOR,
             anchored_position=(1,32),anchor_point=(0.0,1.0),line_spacing=1.0)
         self.weather1.append(self.temp_l)
         self.weather1.append(self.temp_unit_l)
@@ -299,7 +299,7 @@ class MessageMode(displayio.Group):
         return new
 
     def __init__(self,msg_duration=5,*,font=None):
-        super().__init__(max_size=2)
+        super().__init__()
         self.msg_duration = msg_duration
         self.persist = False
 
@@ -312,10 +312,9 @@ class MessageMode(displayio.Group):
         else:
             self.font = font
 
-        self._bg_group = displayio.Group(max_size=1)
+        self._bg_group = displayio.Group()
         self._text = Label(
             font=self.font,
-            max_glyphs=50,
             anchored_position=(64,32),
             anchor_point=(1.0,1.0),
             color=0x787878,

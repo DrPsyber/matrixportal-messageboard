@@ -6,15 +6,18 @@ import adafruit_requests as requests
 import framebufferio
 import rgbmatrix
 from displayio import release_displays
+import adafruit_connection_manager
 import adafruit_minimqtt.adafruit_minimqtt as MQTT
 import neopixel
-from adafruit_esp32spi import adafruit_esp32spi
-from adafruit_esp32spi import adafruit_esp32spi_wifimanager
-import adafruit_esp32spi.adafruit_esp32spi_socket as socket
 import time
 import board
+from adafruit_matrixportal.network import Network
+import ssl
+import socketpool
+import wifi
+import os
 
-from file_handler import FileHandler
+# from file_handler import FileHandler
 import adafruit_logging as logging
 
 gc.collect()
@@ -44,7 +47,7 @@ except ImportError:
 # --- Display setup ---
 release_displays()
 matrix = rgbmatrix.RGBMatrix(
-    width=64, bit_depth=5,
+    width=160, bit_depth=3,
     rgb_pins=[board.MTX_R1, board.MTX_G1, board.MTX_B1,
               board.MTX_R2, board.MTX_G2, board.MTX_B2],
     addr_pins=[board.MTX_ADDRA, board.MTX_ADDRB,
@@ -55,22 +58,26 @@ matrix = rgbmatrix.RGBMatrix(
 )
 display = framebufferio.FramebufferDisplay(matrix)
 # Rotate display if needed
-display.rotation = 180
+display.rotation = 0
 
 # --- Network Setup ---
 # If you are using a board with pre-defined ESP32 Pins:
-esp32_cs = DigitalInOut(board.ESP_CS)
-esp32_ready = DigitalInOut(board.ESP_BUSY)
-esp32_reset = DigitalInOut(board.ESP_RESET)
-spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
-esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
+# esp32_cs = DigitalInOut(board.ESP_CS)
+# esp32_ready = DigitalInOut(board.ESP_BUSY)
+# esp32_reset = DigitalInOut(board.ESP_RESET)
 
-"""Use below for Most Boards"""
-status_light = neopixel.NeoPixel(
-    board.NEOPIXEL, 1, brightness=0.2
-)
-requests = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
-requests.connect()
+# spi = busio.SPI(board.MTX_CLK, board.TX, board.RX)
+# esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
+
+# """Use below for Most Boards"""
+# status_light = neopixel.NeoPixel(
+#     board.NEOPIXEL, 1, brightness=0.2
+# )
+# requests = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
+
+# requests = Network(status_neopixel=board.NEOPIXEL)
+# requests.connect()
+
 
 gc.collect()
 
@@ -106,20 +113,33 @@ def display_mode(mqtt_client, topic, message):
 def display_message(mqtt_client, topic, message):
     message_mode.json_message(mqtt_client, topic, message)
 
+# --- Wi-Fi setup ---
+wifi.radio.connect(
+    os.getenv("CIRCUITPY_WIFI_SSID"), os.getenv("CIRCUITPY_WIFI_PASSWORD")
+)
+print(f"Connected to {os.getenv('CIRCUITPY_WIFI_SSID')}")
+
+# --- Networking setup ---
+context = ssl.create_default_context()
+pool = socketpool.SocketPool(wifi.radio)
+# requests = adafruit_requests.Session(pool, context)
+
 # ========= Set up MQTT ============
 
 # Set socket for MQTT
 #MQTT.set_socket(socket, network._wifi.esp)
-MQTT.set_socket(socket, esp)
+#MQTT.set_socket(socket, esp)
+# pool = adafruit_connection_manager.get_radio_socketpool(esp)
+# ssl_context = adafruit_connection_manager.get_radio_ssl_context(esp)
 
 # Set up a MiniMQTT Client
 mqtt_client = MQTT.MQTT(
-    broker=secrets["mqtt_broker"],
-    port=secrets["mqtt_port"],
-    username=secrets["mqtt_username"],
-    password=secrets["mqtt_passwd"],
+    broker=secrets["aio_broker"],
+    username=secrets["aio_username"],
+    password=secrets["aio_key"],
+    socket_pool=pool,
     is_ssl=True,
-    client_id=secrets["mqtt_client_id"]
+    ssl_context=context,
 )
 
 mqtt_client.enable_logger(logging,log_level=logging.INFO)
